@@ -1,11 +1,19 @@
-%option noyywrap
 %{
 	#include <stdio.h>
 	#include <stdlib.h>
 	#define INDENT (4)
+	#define MAXSYMBOLS 200
+
 	int line = 1;
 	int column = 4;
 	int paren = 0;
+	struct entry
+	{
+		char *lexptr;
+		int token;
+	};
+
+	struct entry symtable[MAXSYMBOLS];
 %}
 
 quote	[']
@@ -19,12 +27,15 @@ ch 		[^'\n\\"]
 
 %%
 
+auto|break|case|char|const|continue|default|do|double|else|enum|extern				{write_keyword();}
+float|for|goto|if|int|long|register|return|short|signed|sizeof|static				{write_keyword();}
+struct|switch|typedef|union|unsigned|void|volatile|while|NULL|malloc|main			{write_keyword();}
 {ditto}({back}{ch}|{back}{back}|{back}{quote}|{back}{ditto}|{ch}|{quote})*{ditto}	{write_string();}
 {quote}({back}{ch}|{back}{back}|{back}{quote}|{back}{ditto}|{ch}|{ditto}){quote}	{write_char();}
 0[0-7]+																				{write_oct();}
 0(x|X){hex}+																		{write_hex();}	
 {digit}+																			{write_int();}
-{digit}*.{digit}*({exp}|\ )															{write_fp();}
+{digit}*\.{digit}*({exp}|\ )														{write_fp();}
 {alpha}({alpha}|{digit})*															{write_id();}
 [{]																					{write_begin();}
 [}]																					{write_end();}
@@ -33,10 +44,14 @@ ch 		[^'\n\\"]
 [\[]																				{write_bopen();}
 [\]]																				{write_bclose();}
 [;]																					{write_sep();}
+\+|\-|\*|\/|%|\+\+|\-\-																{write_op();}
 \<|\>|<=|>=|==|!=																	{write_op();}
-\/\/[^\n]*[\n]																		{write_inline();}
+&&|\|\||!																			{write_op();}
+&|\||\^|~|\<\<|\>\>																	{write_op();}
+=|\+=|\-=|\*=|\/=|%=|\<\<=|\>\>=|&=|\^=|\|=											{write_op();}
+\/\/[^\n]*																			{write_inline();}
 \/\*																				{write_comment();}
-#[^\n]*[\n]																			{write_directive();}
+#[^\n]*																				{write_directive();}
 [\t\v\n\r\f]																		{}
 
 %%
@@ -69,6 +84,13 @@ write_html()
 	{
 		write_html_char(*s++);
 	}
+}
+
+write_keyword()
+{
+	printf("<font color='#0000FF'><b>");
+	write_html();
+	printf("</b></font>");
 }
 
 write_string()
@@ -152,12 +174,12 @@ write_close()
 
 write_bopen()
 {
-	printf("bopen\n");
+	write_html();
 }
 
 write_bclose()
 {
-	printf("bclose\n");
+	write_html();
 }
 
 write_sep()
@@ -185,6 +207,7 @@ write_inline()
 	printf("<font color='#00FF00'>");
 	write_html();
 	printf("</font>");
+	indent();
 }
 
 write_comment()
@@ -207,6 +230,7 @@ write_comment()
 			write_html_char(c1);
 		}
 		printf("</font>");
+		indent();
 }
 
 write_directive()
@@ -214,6 +238,7 @@ write_directive()
 	printf("<font color='#FF00FF'><b>");
 	write_html();
 	printf("</b></font>");
+	indent();
 }
 
 int main()

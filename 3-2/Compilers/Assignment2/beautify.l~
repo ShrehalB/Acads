@@ -41,59 +41,113 @@ ch 		[^'\n\\"]
 
 %%
 
+indent() 
+{ 
+	printf("\n%-*d", column, line++); 
+}
+
+write_html_char(int c)
+{ 
+	switch (c)
+	{ 
+		case '<': 	printf("&lt;"); 
+					break;
+		case '>': 	printf("&gt;"); 
+					break;
+		case '"': 	printf("&quot;"); 
+					break;
+		case '&': 	printf("&amp;"); 
+					break;
+		default: 	putchar(c);
+	}
+}
+
+write_html() 
+{ 
+	char *s = yytext;
+	while (*s)
+	{
+		write_html_char(*s++);
+	}
+}
+
 write_string()
 {
-	printf("str\n");
+	printf("<font color='#FF0000'>");
+	write_html();
+	printf("</font>");
 }
 
 write_char()
 {
-	printf("char\n");
+	printf("<font color='#00FFFF'><u>");
+	write_html();
+	printf("</u></font>");
 }
 
 write_oct()
 {
-	printf("oct\n");
+	printf("<font color='#00FFFF'><i>");
+	write_html();
+	printf("</i></font>");
 }
 
 write_hex()
 {
-	printf("hex\n");
+	printf("<font color='#00FFFF'><i>");
+	write_html();
+	printf("</i></font>");
 }
 
 write_int()
 {
-	printf("int\n");
+	printf("<font color='#00FFFF'><i>");
+	write_html();
+	printf("</i></font>");
 }
 
 write_fp()
 {
-	printf("fp\n");
+	printf("<font color='#00FFFF'>");
+	write_html();
+	printf("</font>");
 }
 
 write_id()
 {
-	printf("id\n");
+	printf("<font color='#0000FF'>");
+	write_html();
+	printf("</font>");
 }
 
 write_begin()
-{
-	printf("begin\n");
+{ 
+	indent();
+	write_html();
+	column += INDENT;
+	indent();
 }
 
 write_end()
-{
-	printf("end\n");
+{ 
+	column -= INDENT;
+	indent();
+	write_html();
+	indent();
 }
 
 write_open()
-{
-	printf("open\n");
+{ 
+	write_html();
+	putchar(' ');
+	paren++; 
 }
 
 write_close()
-{
-	printf("close\n");
+{ 
+	write_html();
+	putchar(' ');
+	paren--; 
 }
 
 write_bopen()
@@ -107,33 +161,59 @@ write_bclose()
 }
 
 write_sep()
-{
-	printf("sep\n");
+{ 
+	write_html();
+	if (!paren)
+	{
+		indent();
+	}
+	else
+	{
+		putchar(' ');
+	}
 }
 
 write_op()
 {
-	printf("op\n");
-}
-
-indent() 
-{ 
-	printf("\n%-*d", column, line++); 
+	printf("<font color='#000000'><b>");
+	write_html();
+	printf("</b></font>");
 }
 
 write_inline()
 {
-	printf("inline\n");
+	printf("<font color='#00FF00'>");
+	write_html();
+	printf("</font>");
 }
 
 write_comment()
 {
-	printf("comment\n");
+	char c, c1;
+	printf("<font color='#00FF00'>/*");
+	loop:
+		while ((c = input()) != '*' && c != 0)
+		{
+			write_html_char(c);
+		}
+		write_html_char('*');
+		if ((c1 = input()) != '/' && c != 0)
+		{ 
+			unput(c1);
+			goto loop; 
+		}
+		if (c != 0)
+		{
+			write_html_char(c1);
+		}
+		printf("</font>");
 }
 
 write_directive()
 {
-	printf("directive\n");
+	printf("<font color='#FF00FF'><b>");
+	write_html();
+	printf("</b></font>");
 }
 
 int main()
