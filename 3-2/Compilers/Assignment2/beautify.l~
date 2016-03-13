@@ -1,12 +1,8 @@
 %{
 	#include <stdio.h>
 	#include <stdlib.h>
-	#include <string.h>
 	#define INDENT (4)
 	#define MAXSYMBOLS 200
-
-	int symtableIndex = 0;
-	char *tok = "int";
 
 	int line = 1;
 	int column = 4;
@@ -18,32 +14,6 @@
 	};
 
 	struct entry symtable[MAXSYMBOLS];
-
-	int lookup(char *lexeme)
-	{
-		int i;
-		for(i=0;i<symtableIndex;i++)
-		{
-			if(strcmp(symtable[i].lexptr,lexeme)==0)
-			{
-				return i;
-			}
-		}
-		return -1;
-	}
-
-	int insert(char *a, int token)
-	{
-		symtable[symtableIndex].lexptr = (char*)malloc(sizeof(char)*strlen(a));
-		strcpy(symtable[symtableIndex].lexptr,a);
-		symtable[symtableIndex].token = token;
-		return symtableIndex++;
-	}
-
-	void init()
-	{
-		
-	}
 %}
 
 quote	[']
@@ -81,9 +51,8 @@ struct|switch|typedef|union|unsigned|void|volatile|while|NULL|malloc|main			{wri
 =|\+=|\-=|\*=|\/=|%=|\<\<=|\>\>=|&=|\^=|\|=											{write_op();}
 \/\/[^\n]*																			{write_inline();}
 \/\*																				{write_comment();}
-#[^\n]*																				{write_directive();}																				{}
-[\t]																				{}			
-[\v\n\r\f]																			{}
+#[^\n]*																				{write_directive();}
+[\t\v\n\r\f]																		{}
 
 %%
 
@@ -122,7 +91,6 @@ write_keyword()
 	printf("<font color='#0000FF'><b>");
 	write_html();
 	printf("</b></font>");
-	//printf("%s",yytext);
 }
 
 write_string()
@@ -169,22 +137,9 @@ write_fp()
 
 write_id()
 {
-	int look = lookup(yytext);
-	if(look==-1)
-	{
-		insert(yytext,1);
-		printf("<font color='#0000FF'>");
-		printf("<a name = \"%s\">",yytext);
-		write_html();
-		printf("</font>");
-	}
-	else
-	{
-		printf("<a href=\"#%s\">",yytext);
-		write_html();
-		printf("</a>");
-	}
-	
+	printf("<font color='#0000FF'>");
+	write_html();
+	printf("</font>");
 }
 
 write_begin()
@@ -288,7 +243,6 @@ write_directive()
 
 int main()
 {
-	init();
 	printf("<html><pre>\n");
 	indent();
 	yylex();
